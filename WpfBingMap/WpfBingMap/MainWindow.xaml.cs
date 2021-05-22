@@ -12,6 +12,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -23,7 +24,10 @@ namespace WpfBingMap
     /// </summary>
     public partial class MainWindow : Window
     {
-
+        private LocationCollection _polyLocations;
+        private MapPolyline mapPolyline;
+        private Pushpin carPushpin;
+        private TranslateTransform translateTransform;
 
         public IEnumerable PushpinArray
         {
@@ -38,16 +42,62 @@ namespace WpfBingMap
         public MainWindow()
         {
             InitializeComponent();
-
+            //this.map.Mode = new MercatorMode();
+            //this.map.Children.Add(new AMapTitleLayer());
+            //this.map.MouseDown += Map_MouseDown;
             var pushpins = new List<PushpinModel>();
             pushpins.Add(new PushpinModel { ID=1, Location = new Location(39.8151940395589, 116.411970893135),Title="和义东里社区" });
             pushpins.Add(new PushpinModel { ID = 2, Location = new Location(39.9094878843105, 116.33299936282) ,Title="中国水科院南小区"});
-            pushpins.Add(new PushpinModel { ID = 3, Location = new Location(39.9181518802641, 116.203328913478),Title="石景山山姆会员超市" });
+            pushpins.Add(new PushpinModel { ID = 3, Location = new Location(39.9219204792284, 116.203500574855),Title="石景山山姆会员超市" });
             pushpins.Add(new PushpinModel { ID = 4, Location = new Location(39.9081417418219, 116.331244439925), Title = "茂林居小区" });
             PushpinArray = pushpins;
-        }
 
-       
+             _polyLocations = new LocationCollection();
+            _polyLocations.Add(new Location(39.9082973053021, 116.63105019548));
+            _polyLocations.Add(new Location(39.9155572462212, 116.192505993178));
+            _polyLocations.Add(new Location(39.8065773542251, 116.276113341099));
+
+            mapPolyline = new MapPolyline 
+            {
+                Stroke = Brushes.Green,
+                StrokeThickness = 2,
+                Locations = _polyLocations,
+            };
+            CarLayer.Children.Add(mapPolyline);
+            carPushpin = new Pushpin
+            {
+                Template = this.Resources["CarTemplate"] as ControlTemplate,
+                Location = _polyLocations[0],
+                PositionOrigin = PositionOrigin.Center,
+                RenderTransformOrigin = new Point(0.5,0.5)
+            };
+            translateTransform = new TranslateTransform();
+            carPushpin.RenderTransform = translateTransform;
+            CarLayer.Children.Add(carPushpin);
+        }
+        private void BtnCar_Click(object sender, RoutedEventArgs e)
+        {
+            //var storyboard = new Storyboard();
+            var doubleAnimation = new DoubleAnimation()
+            {
+                From = _polyLocations[0].Longitude,
+                To = _polyLocations[1].Longitude,
+                Duration = new Duration(TimeSpan.FromSeconds(1.5))
+            };
+            //storyboard.Children.Add(doubleAnimation);
+            //Storyboard.SetTargetProperty(doubleAnimation, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.X)"));
+            //carPushpin.BeginAnimation(, doubleAnimation);
+            //translateTransform.BeginAnimation();
+
+        }
+        private void Map_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            Point mousePosition = e.GetPosition(this);
+            Location pinLocation = this.map.ViewportPointToLocation(mousePosition);
+            
+            Console.WriteLine(pinLocation);
+
+        }
 
         private void Pushpin_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -56,6 +106,15 @@ namespace WpfBingMap
             map.ZoomLevel = 16;
         }
 
+        private void PART_Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var grid = sender as Grid;
+            var model = PushpinArray.OfType<PushpinModel>().FirstOrDefault(x=>x.ID.Equals(grid.Tag));
+            map.Center = model.Location;
+            map.ZoomLevel = 16;
+        }
+
+       
     }
     public class PushpinModel
     {
@@ -63,26 +122,38 @@ namespace WpfBingMap
         public int ID { get; set; }
         public string Title { get; set; }
     }
-    public class OpenstreetmapTileSource: TileSource
+    //public class OpenstreetmapTileSource: TileSource
+    //{
+    //    public override Uri GetUri(int x, int y, int zoomLevel)
+    //    {
+    //        //var url = string.Format("https://www.openstreetmap.org/#map={z}/{x}/{y}",zoomLevel,x,y);
+    //        //return new Uri(url, UriKind.Absolute);
+    //        var uri= new Uri(UriFormat.
+    //                   Replace("{x}", x.ToString()).
+    //                   Replace("{y}", y.ToString()).
+    //                   Replace("{z}", zoomLevel.ToString()));
+    //        Console.WriteLine(uri);
+    //        return uri;
+    //    }
+    //}
+    //public class OpenstreetmapTileLayer : MapTileLayer 
+    //{
+    //    public OpenstreetmapTileLayer()
+    //    {
+    //        TileSource = new OpenstreetmapTileSource();
+    //    }
+
+    //    public string UriFormat
+    //    {
+    //        get { return TileSource.UriFormat; }
+    //        set { TileSource.UriFormat = value; }
+    //    }
+    //}
+    public class AMapTitleLayer : MapTileLayer
     {
-        public override Uri GetUri(int x, int y, int zoomLevel)
+        public AMapTitleLayer()
         {
-            //var UriFormat = "https://www.openstreetmap.org/#map={z}/{x}/{y}";
-            //var url = string.Format("https://www.openstreetmap.org/#map={z}/{x}/{y}",zoomLevel,x,y);
-            //return new Uri(url, UriKind.Absolute);
-            var uri= new Uri(UriFormat.
-                       Replace("{x}", x.ToString()).
-                       Replace("{y}", y.ToString()).
-                       Replace("{z}", zoomLevel.ToString()));
-            Console.WriteLine(uri);
-            return uri;
-        }
-    }
-    public class OpenstreetmapTileLayer : MapTileLayer 
-    {
-        public OpenstreetmapTileLayer()
-        {
-            TileSource = new OpenstreetmapTileSource();
+            TileSource = new AMapTileSource();
         }
 
         public string UriFormat
@@ -91,62 +162,14 @@ namespace WpfBingMap
             set { TileSource.UriFormat = value; }
         }
     }
-    public class CustomTileSource : TileSource
+    public class AMapTileSource: TileSource
     {
-        public override Uri GetUri(int x, int y, int zoomLevel) =>
-            new Uri($"http://mt0.google.com/vt/x={x}&amp;y={y}&amp;z={zoomLevel}.png");
-        //new Uri($"https://tile.openstreetmap.org/{zoomLevel}/{x}/{y}.png");
-    }
-    public class OwnDrawTileSource : TileSource
-    {
-        public OwnDrawTileSource()
+        public override Uri GetUri(int x, int y, int zoomLevel)
         {
-            this.DirectImage = this.TileRender;
-        }
-
-        public BitmapImage TileRender(long x, long y, int zoomLevel)
-        {
-            var rawData = new byte[256 * 256 * 4];
-            var a = (byte)0x80;
-            var r = ((x + y) % 3) == 0 ? (byte)0xFF : (byte)0;
-            var g = ((x + y + 1) % 3) == 0 ? (byte)0xFF : (byte)0;
-            var b = ((x + y + 2) % 3) == 0 ? (byte)0xFF : (byte)0;
-
-            for (var yy = 0; yy < 256; yy++)
-            {
-                for (var xx = 0; xx < 256; xx++)
-                {
-                    var index = (yy * 256 + xx) * 4;
-                    rawData[index] = r;
-                    rawData[index + 1] = g;
-                    rawData[index + 2] = b;
-                    rawData[index + 3] = a;
-                }
-            }
-
-
-            var source = BitmapSource.Create(256, 256, 96, 96, PixelFormats.Pbgra32, null, rawData, 256 * 4);
-
-            var result = new BitmapImage();
-            using (var stream = new MemoryStream())
-            {
-                var encoder = new PngBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(source));
-                encoder.Save(stream);
-
-                stream.Position = 0;
-
-                result.BeginInit();
-                result.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
-                result.CacheOption = BitmapCacheOption.OnLoad;
-                result.UriSource = null;
-                result.StreamSource = stream;
-                result.EndInit();
-            }
-            result.Freeze();
-
-            return result;
+            string url = "http://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x=" + x + "&y=" + y + "&z=" + zoomLevel;
+            return new Uri(url, UriKind.Absolute);
         }
     }
+
 
 }

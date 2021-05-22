@@ -95,5 +95,9 @@
   <ItemGroup>
     <Folder Include="Libs\" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Car\Car2.png" />
+    <Resource Include="Images\Car\Car1.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
