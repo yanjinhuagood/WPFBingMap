@@ -18,6 +18,7 @@
 
 <img src="/Images/map.gif"/> 
 
+<img src="/Images/map2.gif"/> 
 
 
 

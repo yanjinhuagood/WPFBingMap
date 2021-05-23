@@ -16,9 +16,9 @@
             <GradientStop Color="#FF5A6BD8" Offset="0.499"/>
         </LinearGradientBrush>
         <ControlTemplate x:Key="CarTemplate" TargetType="map:Pushpin">
-            <Grid>
-                <Ellipse Width="30" Height="30" Fill="White" StrokeThickness="3" Stroke="Red"/>
-                <Image Source="Images/Car/Car2.png" Width="20" Height="20"/>
+            <Grid ToolTip="物资车辆">
+                <Ellipse Width="35" Height="35" Fill="White" StrokeThickness="3" Stroke="Red"/>
+                <Image Source="Images/Car/Car2.png" Width="25" Height="25"/>
             </Grid>
           
         </ControlTemplate>
@@ -141,7 +141,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Rectangle Grid.RowSpan="3" Fill="#FF364BD8" Opacity=".8" Stroke="#FFCCFEFF" StrokeThickness="1.5"/>
-                <TextBlock Text="数据信息" FontSize="16" Foreground="White" Margin="10,0"/>
+                <TextBlock Text="数据信息" FontSize="16" Foreground="White" Margin="10,10,0,0"/>
                 <ItemsControl ItemsSource="{Binding PushpinArray,RelativeSource={RelativeSource AncestorType=local:MainWindow}}"
                               Margin="4,10" Grid.Row="1">
                     <ItemsControl.ItemTemplate>
@@ -171,7 +171,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <Button Content="播放车辆轨迹" Click="BtnCar_Click" Grid.Row="2"/>
+                <Button Content="物资轨迹" Click="BtnCar_Click" Grid.Row="2" Height="40"/>
             </Grid>
         </DockPanel>
     </Grid>
